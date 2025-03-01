@@ -1,0 +1,23 @@
+# الخطوة 1: استخدم .NET 8.0 بدلاً من .NET 6.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+# الخطوة 2: تحميل SDK وبناء المشروع
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY ["AlgorithmProject/AlgorithmProject.csproj", "AlgorithmProject/"]
+RUN dotnet restore "AlgorithmProject/AlgorithmProject.csproj"
+COPY . .
+WORKDIR "/src/AlgorithmProject"
+RUN dotnet build "AlgorithmProject.csproj" -c Release -o /app/build
+
+# الخطوة 3: نشر التطبيق
+FROM build AS publish
+RUN dotnet publish "AlgorithmProject.csproj" -c Release -o /app/publish
+
+# الخطوة 4: تشغيل التطبيق النهائي
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "AlgorithmProject.dll"]
