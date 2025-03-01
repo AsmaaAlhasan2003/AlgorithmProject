@@ -1,0 +1,231 @@
+﻿<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شجرة Trie</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <h4>إدخال كلمة جديدة</h4>
+            <div class="input-group mb-3">
+                <input type="text" id="insertWord" class="form-control" placeholder="أدخل كلمة">
+                <button class="btn btn-primary" onclick="insertWord()">إدخال</button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <h4>البحث عن كلمة</h4>
+            <div class="input-group mb-3">
+                <input type="text" id="searchWord" class="form-control" placeholder="أدخل كلمة للبحث">
+                <button class="btn btn-success" onclick="searchWord()">بحث</button>
+            </div>
+            <label>عدد المحاولات:</label>
+            <span id="searchAttempts">0</span>
+        </div>
+        <div class="col-md-4">
+            <h4>حذف أو تعديل كلمة</h4>
+            <div class="input-group mb-3">
+                <input type="text" id="modifyWord" class="form-control" placeholder="أدخل الكلمة للتعديل أو الحذف">
+                <button class="btn btn-danger" onclick="deleteWord()">حذف</button>
+                <button class="btn btn-warning" onclick="modifyWord()">تعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <h4>عرض جذر الشجرة</h4>
+        <p id="rootValue" class="fs-4 text-warning">غير محدد</p>
+        <button class="btn btn-info" onclick="getRoot()">عرض الجذر</button>
+    </div>
+
+    <div class="mt-4">
+        <h4>عرض شجرة Trie</h4>
+        <div class="tree-container">
+            <svg width="1000" height="600"></svg>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('حدث خطأ أثناء العملية. يرجى المحاولة مرة أخرى.');
+            }
+        }
+
+        async function insertWord() {
+            const word = document.getElementById("insertWord").value;
+            if (!word) {
+                alert("يرجى إدخال كلمة.");
+                return;
+            }
+
+            const treeValues = await getTreeValues();
+            if (treeValues.includes(word)) {
+                alert("الكلمة موجودة بالفعل في الشجرة.");
+                return;
+            }
+
+            const data = await fetchData("/trie/insert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(word)
+            });
+
+            if (data) {
+                alert("تم إدخال الكلمة بنجاح!");
+                document.getElementById("insertWord").value = "";
+                drawTree();
+            }
+        }
+
+        async function searchWord() {
+            const word = document.getElementById("searchWord").value;
+            if (!word) {
+                alert("يرجى إدخال كلمة للبحث.");
+                return;
+            }
+
+            const data = await fetchData(`/trie/search/${word}`);
+            if (data) {
+                alert(data.exists ? `الكلمة ${word} موجودة في الشجرة.` : `الكلمة ${word} غير موجودة.`);
+                document.getElementById("searchAttempts").textContent = data.attempts;
+            }
+        }
+
+        async function deleteWord() {
+            const word = document.getElementById("modifyWord").value;
+            if (!word) {
+                alert("يرجى إدخال كلمة للحذف.");
+                return;
+            }
+
+            const data = await fetchData(`/trie/delete`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(word)  // إرسال الكلمة كـ JSON
+            });
+
+            if (data) {
+                alert(data.success ? "تم حذف الكلمة بنجاح!" : "الكلمة غير موجودة.");
+                document.getElementById("modifyWord").value = "";
+                drawTree();
+            }
+        }
+
+        async function modifyWord() {
+            const word = document.getElementById("modifyWord").value;
+            if (!word) {
+                alert("يرجى إدخال كلمة للتعديل.");
+                return;
+            }
+
+            const newWord = prompt("أدخل الكلمة الجديدة:", word);
+            if (!newWord) {
+                alert("يرجى إدخال الكلمة الجديدة.");
+                return;
+            }
+
+            const data = await fetchData(`/trie/modify`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldWord: word, newWord: newWord })
+            });
+
+            if (data) {
+                alert(data.success ? "تم تعديل الكلمة بنجاح!" : "الكلمة غير موجودة.");
+                document.getElementById("modifyWord").value = "";
+                drawTree();
+            }
+        }
+
+        async function getRoot() {
+            const data = await fetchData("/trie/root");
+            if (data) {
+                document.getElementById("rootValue").textContent = data.rootValue !== null ? data.rootValue : "الشجرة فارغة";
+            }
+        }
+
+        async function getTreeValues() {
+            const data = await fetchData("/trie/words");
+            return data || [];
+        }
+
+        async function drawTree() {
+            const treeValues = await getTreeValues();
+            const svg = d3.select("svg");
+            svg.selectAll("*").remove();
+
+            if (treeValues.length === 0) {
+                alert("الشجرة فارغة.");
+                return;
+            }
+
+            let treeData = buildTrieTree(treeValues);
+            let root = d3.hierarchy(treeData);
+            let treeLayout = d3.tree().size([500, 100]);
+            treeLayout(root);
+
+            let g = svg.append("g").attr("transform", "translate(50,50)");
+
+            g.selectAll(".link")
+                .data(root.links())
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y)
+                .attr("stroke", "#ccc")
+                .attr("stroke-width", 2);
+
+            g.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("cx", d => d.x + 50)  // تعديل المسافة بين العقد
+                .attr("cy", d => d.y + 40)  // تعديل المسافة بين العقد
+                .attr("r", 20)
+                .attr("fill", "steelblue");
+
+            g.selectAll(".text")
+                .data(root.descendants())
+                .enter().append("text")
+                .attr("x", d => d.x + 50)  // تعديل المسافة بين العقد
+                .attr("y", d => d.y + 40)  // تعديل المسافة بين العقد
+                .attr("text-anchor", "middle")
+                .attr("fill", "white")
+                .text(d => d.data.name);
+        }
+
+        function buildTrieTree(values) {
+            const buildTrieNode = (prefix, children) => ({
+                name: prefix,
+                children: Object.keys(children).map(child => buildTrieNode(child, children[child]))
+            });
+
+            const trieStructure = values.reduce((acc, word) => {
+                let node = acc;
+                for (let char of word) {
+                    if (!node[char]) node[char] = {};
+                    node = node[char];
+                }
+                return acc;
+            }, {});
+
+            return buildTrieNode('', trieStructure);
+        }
+
+        window.onload = drawTree;
+    </script>
+</body>
+</html>

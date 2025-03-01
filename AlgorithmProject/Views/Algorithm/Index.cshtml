@@ -1,0 +1,151 @@
+﻿@{
+    ViewData["Title"] = "اختيار الخوارزمية";
+}
+
+<div class="container">
+    <h1 class="welcome-text">مرحبًا بكم في مشروع تحليل وتصميم الخوارزميات</h1>
+    <p class="welcome-subtext">تم تنفيذ هذا المشروع من قبل الطالبات فوزية وأسماء وسلمى لمادة تحليل الخوارزميات، الجامعة الدولية للعلوم والنهضة، كلية الهندسة المعلوماتية، المستوى الثالث.</p>
+
+    <h2>اختر خوارزمية</h2>
+
+    <div class="algorithm-list">
+        <div class="algorithm-card">
+            <h3>شجرة AVL</h3>
+            <p>تعرف على كيفية استخدام شجرة AVL لتنظيم البيانات بشكل متوازن.</p>
+            <a class="btn" asp-controller="AVLTree" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+        <div class="algorithm-card">
+            <h3>شجرة Binary-Tree</h3>
+            <p>تستخدم لترتيب العناصر بشجرة ثنائية .</p>
+            <a class="btn" asp-controller="BinaryTree" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+        <div class="algorithm-card">
+            <h3>NQueens</h3>
+            <p>حل مشكلة الملكات باستخدام الBackTracking.</p>
+            <a class="btn" asp-controller="NQueens" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+        <div class="algorithm-card">
+            <h3> Sort Algorithm</h3>
+            <p>اكتشف كيفية ترتيب المصفوفات باستخدام خوارزميات الترتيب.</p>
+            <a class="btn" asp-controller="Sort" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+        <div class="algorithm-card">
+            <h3>Min-Heap</h3>
+            <p>تعرف على كيفية استخدام Min-Heap لترتيب البيانات بأقل قيمة.</p>
+            <a class="btn" asp-controller="MinHeap" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+        <div class="algorithm-card">
+            <h3>Max-Heap</h3>
+            <p>تعرف على كيفية استخدام Max-Heap لترتيب البيانات بأعلى قيمة.</p>
+            <a class="btn" asp-controller="MaxHeap" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+        <div class="algorithm-card">
+            <h3>شجرة Trie</h3>
+            <p>اكتشف كيفية استخدام شجرة Trie لحفظ واسترجاع الكلمات بشكل سريع.</p>
+            <a class="btn" asp-controller="Trie" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+        <div class="algorithm-card">
+            <h3>Priorety Queue</h3>
+            <p>تعرف على كيفية استخدام خوارزمية Priority Queue</p>
+            <a class="btn" asp-controller="PriorityQueue" asp-action="Index">عرض الخوارزمية</a>
+        </div>
+
+    </div>
+</div>
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+<style>
+
+    body {
+        font-family: Arial, sans-serif;
+        direction: rtl;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 80%;
+        margin: 0 auto;
+        padding-top: 50px;
+    }
+
+    .welcome-text {
+        text-align: center;
+        color: #1a237e;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .welcome-subtext {
+        text-align: center;
+        color: #ffb300;
+        font-size: 18px;
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        text-align: center;
+        color: #1a237e;
+        font-size: 36px;
+        margin-bottom: 30px;
+    }
+
+    .algorithm-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .algorithm-card {
+        background-color: white;
+        border: 2px solid #1a237e;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        width: 280px;
+        text-align: center;
+        padding: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .algorithm-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .algorithm-card a {
+            display: block;
+            text-decoration: none;
+            background-color: #ffb300;
+            color: #1a237e;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+            .algorithm-card a:hover {
+                background-color: #ff8f00;
+                transform: scale(1.05);
+            }
+
+        .algorithm-card h3 {
+            color: #1a237e;
+            font-size: 22px;
+        }
+</style>

@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ترتيب المصفوفة</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            text-align: center;
+        }
+
+        #array-chart {
+            border: 2px solid #ccc;
+            padding: 15px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+            button:hover {
+                background: #e67e22;
+            }
+
+        input {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            width: 60px;
+            margin: 10px;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            width: 120px;
+        }
+
+        .result {
+            margin-top: 20px;
+        }
+
+        .added-value {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #f39c12;
+        }
+
+        .statistics {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #f39c12;
+        }
+
+        .bar {
+            width: 20px;
+            background-color: #3498db;
+            margin: 5px;
+            border-radius: 5px;
+            transition: height 0.5s ease;
+        }
+
+        .highlight {
+            background-color: #e74c3c; /* اللون عند التمييز */
+        }
+
+        .moved {
+            background-color: #2ecc71; /* اللون عند التبديل */
+        }
+    </style>
+</head>
+<body>
+    <h2>ترتيب المصفوفة</h2>
+
+    <label for="value">أدخل رقم لإضافته:</label>
+    <input type="number" id="value" required />
+    <button onclick="addElement()">أضف الرقم</button>
+    <div id="addedValue" class="added-value"></div>
+
+    <label for="removeValue">أدخل رقم لحذفه:</label>
+    <input type="number" id="removeValue" required />
+    <button onclick="removeElement()">احذف الرقم</button>
+
+    <label for="updateValue">أدخل الرقم القديم لتعديله:</label>
+    <input type="number" id="updateValue" required />
+    <label for="newValue">أدخل الرقم الجديد:</label>
+    <input type="number" id="newValue" required />
+    <button onclick="updateElement()">تعديل الرقم</button>
+
+    <h3>اختر الخوارزمية:</h3>
+    <select id="algorithm">
+        <option value="BubbleSort">Bubble Sort</option>
+        <option value="SelectionSort">Selection Sort</option>
+        <option value="InsertionSort">Insertion Sort</option>
+        <option value="MergeSort">Merge Sort</option>
+    </select>
+
+    <button onclick="sortArray()">ترتيب المصفوفة</button>
+
+    <h3>المصفوفة الحالية:</h3>
+    <div id="array-chart"></div>
+
+    <div class="result">
+        <h4>الإحصائيات:</h4>
+        <div class="statistics">
+            <p>عدد المقارنات: <span id="comparisons">0</span></p>
+            <p>عدد التبديلات: <span id="swaps">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        let array = [];
+        let comparisons = 0;
+        let swaps = 0;
+
+        async function getArray() {
+            const response = await fetch("/Sort/GetArray");
+            const result = await response.json();
+            array = result;
+            displayArray();
+        }
+
+        async function addElement() {
+            const value = document.getElementById('value').value;
+            await fetch(`/Sort/AddElement?value=${value}`, { method: 'POST' });
+            document.getElementById('addedValue').innerText = `الرقم المضاف: ${value}`;
+            getArray();
+        }
+
+        async function removeElement() {
+            const value = document.getElementById('removeValue').value;
+            await fetch(`/Sort/RemoveElement?value=${value}`, { method: 'POST' });
+            getArray();
+        }
+
+        async function updateElement() {
+            const oldValue = document.getElementById('updateValue').value;
+            const newValue = document.getElementById('newValue').value;
+            await fetch(`/Sort/UpdateElement?oldValue=${oldValue}&newValue=${newValue}`, { method: 'POST' });
+            getArray();
+        }
+
+        async function sortArray() {
+            const algorithm = document.getElementById('algorithm').value;
+            const response = await fetch(`/Sort/SortArray`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Algorithm: algorithm })
+            });
+            const result = await response.json();
+            array = result.sortedArray;
+            comparisons = result.comparisons;
+            swaps = result.swaps;
+            await displayArrayWithAnimation();
+            displayStatistics();
+        }
+
+        function displayArray() {
+            const arrayChart = document.getElementById("array-chart");
+            arrayChart.innerHTML = array.map(num => `<div class="bar" style="height:${num * 10}px;"></div>`).join('');
+        }
+
+        async function displayArrayWithAnimation() {
+            const arrayChart = document.getElementById("array-chart");
+            const bars = arrayChart.getElementsByClassName('bar');
+            for (let i = 0; i < array.length; i++) {
+                bars[i].classList.remove('highlight', 'moved');
+                bars[i].style.height = `${array[i] * 10}px`;
+                await new Promise(resolve => setTimeout(resolve, 300));  // التأخير بين كل خطوة
+            }
+        }
+
+        function displayStatistics() {
+            document.getElementById("comparisons").innerText = comparisons;
+            document.getElementById("swaps").innerText = swaps;
+        }
+
+        // عند تحميل الصفحة
+        window.onload = getArray;
+    </script>
+</body>
+</html>

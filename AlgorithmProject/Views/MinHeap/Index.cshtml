@@ -1,0 +1,181 @@
+﻿@{
+    ViewData["Title"] = "Min Heap Visualizer";
+}
+
+<h2 style="color: #003366; text-align: center;">Min Heap</h2>
+<input type="number" id="heapValue" placeholder="Enter a number" style="border: 2px solid #FFD700; padding: 10px; border-radius: 5px;" />
+<button onclick="pushToHeap()" class="btn-insert">Insert</button>
+<button onclick="popFromHeap()" class="btn-remove">Remove Root</button>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h4 style="color: #FFD700; text-align: center;">Heap Values</h4>
+            <div class="heap-values-container">
+                <ul id="heapValuesList">
+                    <!-- سيتم عرض القيم هنا -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tree-container">
+                <svg width="800" height="400"></svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f4f4f9;
+        font-family: Arial, sans-serif;
+        direction: rtl;
+    }
+
+    .btn-insert, .btn-remove {
+        background-color: #003366;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+        .btn-insert:hover {
+            background-color: #FFD700;
+            color: #003366;
+        }
+
+        .btn-remove:hover {
+            background-color: #CC0000;
+        }
+
+    .heap-values-container ul {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .heap-values-container li {
+        margin: 0 10px;
+        padding: 5px 10px;
+        background-color: #FFD700;
+        color: #003366;
+        border: 1px solid #003366;
+        border-radius: 5px;
+    }
+
+    .tree-container {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .node {
+        fill: #003366;
+        stroke: #FFD700;
+        stroke-width: 2px;
+    }
+
+    .link {
+        stroke: #FFD700;
+        stroke-width: 2px;
+    }
+
+    text {
+        font-size: 14px;
+        fill: white;
+        font-weight: bold;
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.4/d3.min.js"></script>
+<script>
+    let heap = [];
+
+    function pushToHeap() {
+        let val = parseInt(document.getElementById('heapValue').value);
+        if (!isNaN(val)) {
+            heap.push(val);
+            heap.sort((a, b) => a - b);
+            drawHeap();
+            updateHeapList();
+        }
+    }
+
+    function popFromHeap() {
+        if (heap.length > 0) {
+            heap.shift();
+            drawHeap();
+            updateHeapList();
+        }
+    }
+
+    function drawHeap() {
+        d3.select("svg").selectAll("*").remove();
+        let treeData = buildTree(heap, 0);
+        let svg = d3.select("svg");
+        let g = svg.append("g").attr("transform", "translate(100,50)");
+
+        let treeLayout = d3.tree().size([600, 200]);
+        let root = d3.hierarchy(treeData);
+        treeLayout(root);
+
+        g.selectAll(".link")
+            .data(root.links())
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        g.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 20);
+
+        g.selectAll(".text")
+            .data(root.descendants())
+            .enter().append("text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y + 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .text(d => d.data.value);
+    }
+
+    function buildTree(arr, index) {
+        if (index >= arr.length) return null;
+        return {
+            value: arr[index],
+            children: [
+                buildTree(arr, 2 * index + 1),
+                buildTree(arr, 2 * index + 2)
+            ].filter(n => n !== null)
+        };
+    }
+
+    function updateHeapList() {
+        let list = document.getElementById('heapValuesList');
+        list.innerHTML = '';
+        heap.forEach(val => {
+            let listItem = document.createElement('li');
+            listItem.textContent = val;
+            list.appendChild(listItem);
+        });
+    }
+
+    window.onload = () => {
+        drawHeap();
+        updateHeapList();
+    };
+</script>

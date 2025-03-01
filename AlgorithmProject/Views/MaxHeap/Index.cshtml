@@ -1,0 +1,151 @@
+﻿<!-- Views/MaxHeap/Index.cshtml -->
+@{
+    ViewData["Title"] = "Max Heap Visualizer";
+}
+
+<h2>Max Heap</h2>
+<input type="number" id="heapValue" placeholder="Enter a number" class="styled-input" />
+<button onclick="pushToHeap()" class="styled-button">Insert</button>
+<button onclick="popFromHeap()" class="styled-button remove">Remove Root</button>
+<div class="tree-container">
+    <svg width="800" height="400"></svg>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.4/d3.min.js"></script>
+<script>
+    let heap = [];
+
+    function pushToHeap() {
+        let val = parseInt(document.getElementById('heapValue').value);
+        if (!isNaN(val)) {
+            heap.push(val);
+            heap.sort((a, b) => b - a); // MaxHeap
+            drawHeap();
+        }
+    }
+
+    function popFromHeap() {
+        if (heap.length > 0) {
+            heap.shift(); // Remove root
+            drawHeap();
+        }
+    }
+
+    function drawHeap() {
+        d3.select("svg").selectAll("*").remove();
+        let treeData = buildTree(heap, 0);
+        let svg = d3.select("svg");
+        let g = svg.append("g").attr("transform", "translate(400,50)");
+
+        let treeLayout = d3.tree().size([600, 200]);
+        let root = d3.hierarchy(treeData);
+        treeLayout(root);
+
+        g.selectAll(".link")
+            .data(root.links())
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        g.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 20);
+
+        g.selectAll(".text")
+            .data(root.descendants())
+            .enter().append("text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y + 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .text(d => d.data.value);
+    }
+
+    function buildTree(arr, index) {
+        if (index >= arr.length) return null;
+        return {
+            value: arr[index],
+            children: [buildTree(arr, 2 * index + 1), buildTree(arr, 2 * index + 2)].filter(n => n !== null)
+        };
+    }
+</script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+        direction: rtl;
+        text-align: center;
+    }
+
+    h2 {
+        color: #003366;
+    }
+
+    .styled-input {
+        padding: 10px;
+        font-size: 16px;
+        border: 2px solid #003366;
+        border-radius: 8px;
+        transition: 0.3s;
+    }
+
+        .styled-input:focus {
+            border-color: #ffcc00;
+            box-shadow: 0 0 8px rgba(255, 204, 0, 0.8);
+        }
+
+    .styled-button {
+        background-color: #ffcc00;
+        color: #003366;
+        font-weight: bold;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+        .styled-button:hover {
+            background-color: #e6b800;
+        }
+
+        .styled-button.remove {
+            background-color: #cc0000;
+            color: white;
+        }
+
+            .styled-button.remove:hover {
+                background-color: #990000;
+            }
+
+    .tree-container {
+        margin-top: 30px;
+    }
+
+    .node {
+        fill: #ffcc00;
+        stroke: #003366;
+        stroke-width: 2px;
+    }
+
+    .link {
+        stroke: #003366;
+        stroke-width: 2px;
+    }
+
+    text {
+        font-size: 14px;
+        fill: #003366;
+        font-weight: bold;
+    }
+</style>

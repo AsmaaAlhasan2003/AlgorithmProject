@@ -1,0 +1,115 @@
+﻿@{
+    ViewData["Title"] = "حل مشكلة N-Queens";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form method="post" action="/NQueens/SolveNQueens">
+    <label for="n">👸أدخل عدد الملكات:</label>
+    <input type="number" name="n" min="1" required />
+    <button type="submit">حل المشكلة</button>
+</form>
+
+@if (ViewBag.Message != null)
+{
+    <div style="color: red;">
+        <strong>@ViewBag.Message</strong>
+    </div>
+}
+
+@if (ViewBag.SolutionsCount != null)
+{
+    <h3 style="margin:5px">عدد الحلول الممكنة: @ViewBag.SolutionsCount</h3>
+}
+
+@if (Model != null)
+{
+    <div id="solutions-container" style="display: grid; grid-template-columns: repeat(auto-fill, 250px); gap: 20px;">
+        @foreach (var solution in Model)
+        {
+            <div class="solution">
+                <div class="chess-board">
+                    @foreach (var row in solution)
+                    {
+                        <div class="chess-row">
+                            @foreach (var cell in row)
+                            {
+
+                                <div class="chess-cell">
+
+                                    @cell
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        let delay = 1000; // تأخير كل 1 ثانية
+
+        window.onload = function () {
+            const solutions = document.querySelectorAll('.solution');
+            let index = 0;
+            showNextSolution();
+
+            function showNextSolution() {
+                if (index < solutions.length) {
+                    solutions[index].style.display = 'block';
+                    index++;
+                    setTimeout(showNextSolution, delay);
+                }
+            }
+        };
+    </script>
+}
+
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(to right, #141e30, #243b55);
+        color: white;
+        text-align: center;
+        direction: rtl;
+    }
+
+    .chess-board {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border: 2px solid #ddd;
+        padding: 10px;
+        margin: 10px;
+    }
+
+    .chess-row {
+        display: flex;
+    }
+
+    .chess-cell {
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        line-height: 50px;
+        margin: 2px;
+        border: 1px solid #ccc;
+        font-size: 1.5em;
+    }
+
+        .chess-cell:nth-child(even) {
+            background-color: #f0f0f0;
+        }
+
+        .chess-cell:nth-child(odd) {
+            background-color: #b0b0b0;
+        }
+
+        .chess-cell:empty {
+            background-color: #fff;
+        }
+</style>

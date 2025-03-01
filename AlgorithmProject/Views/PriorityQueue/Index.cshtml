@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رتل الأولوية</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #2c3e50, #4ca1af);
+            color: white;
+            text-align: center;
+        }
+
+        .queue-container {
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .queue-item {
+            padding: 10px;
+            margin: 5px;
+            background: #f39c12;
+            border-radius: 5px;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+            button:hover {
+                background: #2980b9;
+            }
+
+        input {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>رتل الأولوية</h2>
+    <label for="value">العنصر:</label>
+    <input type="text" id="value" placeholder="أدخل العنصر">
+    <label for="priority">الأولوية:</label>
+    <input type="number" id="priority" placeholder="الأولوية">
+    <button onclick="enqueue()">إضافة</button>
+    <button onclick="dequeue()">إزالة الأعلى أولوية</button>
+    <button onclick="printQueue()">عرض الرتل</button>
+    <h3>العناصر:</h3>
+    <div class="queue-container" id="queue"></div>
+
+    <script>
+        let priorityQueue = [];
+
+        function enqueue() {
+            const value = document.getElementById("value").value;
+            const priority = parseInt(document.getElementById("priority").value);
+            if (value && !isNaN(priority)) {
+                priorityQueue.push({ value, priority });
+                priorityQueue.sort((a, b) => a.priority - b.priority);
+                printQueue();
+            }
+        }
+
+        function dequeue() {
+            if (priorityQueue.length > 0) {
+                priorityQueue.shift();
+                printQueue();
+            }
+        }
+
+        function printQueue() {
+            const queueDiv = document.getElementById("queue");
+            queueDiv.innerHTML = "";
+            priorityQueue.forEach(item => {
+                const div = document.createElement("div");
+                div.classList.add("queue-item");
+                div.textContent = `(${item.priority}) ${item.value}`;
+                queueDiv.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

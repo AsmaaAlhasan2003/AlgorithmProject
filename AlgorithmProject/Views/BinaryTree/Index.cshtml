@@ -1,0 +1,363 @@
+﻿<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شجرة ثنائية</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 2px solid #003366;
+        }
+
+        h2, h4 {
+            text-align: center;
+            color: #003366;
+        }
+
+        .inputs-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+            .inputs-container div {
+                flex: 1;
+                margin: 0 10px;
+            }
+
+            .inputs-container input,
+            .inputs-container button {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                margin-top: 10px;
+                border: 2px solid #003366;
+                border-radius: 8px;
+                transition: all 0.3s ease-in-out;
+            }
+
+                .inputs-container input:focus {
+                    outline: none;
+                    border-color: #ffcc00;
+                    box-shadow: 0 0 8px rgba(255, 204, 0, 0.8);
+                }
+
+            .inputs-container button {
+                background-color: #ffcc00;
+                color: #003366;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.3s ease-in-out;
+            }
+
+                .inputs-container button:hover {
+                    background-color: #e6b800;
+                }
+
+        .operations-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+            .result-container button {
+                background-color: #003366;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 8px;
+                transition: background-color 0.3s ease-in-out;
+            }
+
+                .result-container button:hover {
+                    background-color: #002244;
+                }
+
+        .tree-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .node {
+            fill: #ffcc00;
+            stroke: #003366;
+            stroke-width: 2px;
+        }
+
+        .link {
+            stroke: #003366;
+            stroke-width: 2px;
+        }
+
+        text {
+            font-size: 14px;
+            fill: #003366;
+            font-weight: bold;
+        }
+
+        p {
+            font-size: 16px;
+            color: #003366;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>شجرة ثنائية</h2>
+
+        <div class="inputs-container">
+            <div>
+                <h4>إدخال عنصر جديد</h4>
+                <input type="number" id="insertValue" placeholder="أدخل رقم">
+                <button onclick="insertValue()">إدخال</button>
+                <p id="insertStats"></p>
+            </div>
+            <div>
+                <h4>حذف عنصر</h4>
+                <input type="number" id="deleteValue" placeholder="أدخل رقم للحذف">
+                <button onclick="deleteValue()">حذف</button>
+                <p id="deleteStats"></p>
+            </div>
+            <div>
+                <h4>تعديل عنصر</h4>
+                <input type="number" id="editValue" placeholder="أدخل رقم لتعديله">
+                <button onclick="editValue()">تعديل</button>
+                <p id="editStats"></p>
+            </div>
+        </div>
+
+        <div class="operations-container">
+            <h4>عرض القيم بترتيب:</h4>
+            <div class="result-container">
+                <button onclick="getInOrder()">Inorder</button>
+                <button onclick="getPreOrder()">Preorder</button>
+                <button onclick="getPostOrder()">Postorder</button>
+            </div>
+        </div>
+
+        <div>
+            <p id="inOrderResult"></p>
+            <p id="inOrderTime"></p>
+            <p id="preOrderResult"></p>
+            <p id="preOrderTime"></p>
+            <p id="postOrderResult"></p>
+            <p id="postOrderTime"></p>
+        </div>
+
+        <div class="tree-container">
+            <svg width="1000" height="500"></svg>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.4/d3.min.js"></script>
+    <script>
+        let treeRoot = null; // الجذر الخاص بالشجرة
+        let insertAttempts = 0, deleteAttempts = 0, editAttempts = 0;
+
+        // دالة لإدخال القيمة في الشجرة بناءً على القاعدة
+        async function insertValue() {
+            const startTime = Date.now();
+            const value = parseInt(document.getElementById("insertValue").value);
+            insertAttempts++;
+
+            if (value) {
+                treeRoot = insertIntoTree(treeRoot, value); // إدخال القيمة في الشجرة
+                drawTree();  // رسم الشجرة بعد التعديل
+                const endTime = Date.now();
+                document.getElementById("insertStats").innerText = `الوقت: ${endTime - startTime}ms | المحاولات: ${insertAttempts}`;
+            } else {
+                alert("القيمة غير صحيحة");
+            }
+        }
+
+        // دالة لإدخال القيمة في الشجرة الثنائية (Binary Search Tree)
+        function insertIntoTree(node, value) {
+            if (node === null) {
+                return { value: value, left: null, right: null }; // إذا كانت العقدة فارغة، أنشئ عقدة جديدة
+            }
+
+            // إذا كانت القيمة أصغر من الجذر، تذهب إلى اليسار
+            if (value < node.value) {
+                node.left = insertIntoTree(node.left, value);
+            }
+            // إذا كانت القيمة أكبر من الجذر، تذهب إلى اليمين
+            else if (value > node.value) {
+                node.right = insertIntoTree(node.right, value);
+            }
+
+            return node;
+        }
+
+            function deleteValue() {
+                const startTime = Date.now();
+            const value = parseInt(document.getElementById("deleteValue").value);
+            deleteAttempts++;
+
+            if (value) {
+                treeRoot = deleteFromTree(treeRoot, value);
+            drawTree();
+            const endTime = Date.now();
+            document.getElementById("deleteStats").innerText = `الوقت: ${endTime - startTime}ms | المحاولات: ${deleteAttempts}`;
+                } else {
+                alert("القيمة غير صحيحة");
+                }
+            }
+
+            function deleteFromTree(node, value) {
+                if (node === null) return null;
+
+            if (value < node.value) {
+                node.left = deleteFromTree(node.left, value);
+                } else if (value > node.value) {
+                node.right = deleteFromTree(node.right, value);
+                } else {
+                    if (!node.left) return node.right;
+            if (!node.right) return node.left;
+
+            let minLargerNode = findMin(node.right);
+            node.value = minLargerNode.value;
+            node.right = deleteFromTree(node.right, minLargerNode.value);
+                }
+            return node;
+            }
+
+            function findMin(node) {
+                while (node.left) {
+                node = node.left;
+                }
+            return node;
+            }
+
+            function editValue() {
+                const startTime = Date.now();
+            const oldValue = parseInt(document.getElementById("editValue").value);
+            const newValue = parseInt(prompt("أدخل القيمة الجديدة:"));
+            editAttempts++;
+
+            if (oldValue && newValue) {
+                treeRoot = deleteFromTree(treeRoot, oldValue);
+            treeRoot = insertIntoTree(treeRoot, newValue);
+            drawTree();
+            const endTime = Date.now();
+            document.getElementById("editStats").innerText = `الوقت: ${endTime - startTime}ms | المحاولات: ${editAttempts}`;
+                } else {
+                alert("القيم غير صحيحة");
+                }
+            }
+  
+
+        // دالة لبناء الشجرة الثنائية بناءً على الهيكل الشجري
+        function buildTree(node) {
+            if (!node) return null;
+
+            return {
+                value: node.value,
+                children: [
+                    buildTree(node.left),
+                    buildTree(node.right)
+                ].filter(n => n !== null)
+            };
+        }
+
+        // دالة لعرض الشجرة
+        function drawTree() {
+            d3.select("svg").selectAll("*").remove();  // إزالة الرسم السابق
+            let treeData = buildTree(treeRoot); // بناء الشجرة الثنائية من الجذر
+            let svg = d3.select("svg");
+            let g = svg.append("g").attr("transform", "translate(500,50)");
+
+            let treeLayout = d3.tree().size([300, 200]);
+            let root = d3.hierarchy(treeData);
+            treeLayout(root);
+
+            g.selectAll(".link")
+                .data(root.links())
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            g.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", 20);
+
+            g.selectAll(".text")
+                .data(root.descendants())
+                .enter().append("text")
+                .attr("x", d => d.x)
+                .attr("y", d => d.y + 5)
+                .attr("text-anchor", "middle")
+                .attr("fill", "white")
+                .text(d => d.data.value);
+        }
+
+        // دوال عرض القيم بترتيب Inorder, Preorder, Postorder
+        function getInOrder() {
+            const startTime = Date.now();
+            let result = inorderTraversal(treeRoot);
+            const endTime = Date.now();
+            document.getElementById("inOrderResult").innerText = "Inorder: " + result.join(", ");
+            document.getElementById("inOrderTime").innerText = `الوقت: ${endTime - startTime}ms`;
+        }
+
+        function getPreOrder() {
+            const startTime = Date.now();
+            let result = preorderTraversal(treeRoot);
+            const endTime = Date.now();
+            document.getElementById("preOrderResult").innerText = "Preorder: " + result.join(", ");
+            document.getElementById("preOrderTime").innerText = `الوقت: ${endTime - startTime}ms`;
+        }
+
+        function getPostOrder() {
+            const startTime = Date.now();
+            let result = postorderTraversal(treeRoot);
+            const endTime = Date.now();
+            document.getElementById("postOrderResult").innerText = "Postorder: " + result.join(", ");
+            document.getElementById("postOrderTime").innerText = `الوقت: ${endTime - startTime}ms`;
+        }
+
+        // دوال التنقل عبر الشجرة
+        function inorderTraversal(node) {
+            if (!node) return [];
+            return [...inorderTraversal(node.left), node.value, ...inorderTraversal(node.right)];
+        }
+
+        function preorderTraversal(node) {
+            if (!node) return [];
+            return [node.value, ...preorderTraversal(node.left), ...preorderTraversal(node.right)];
+        }
+
+        function postorderTraversal(node) {
+            if (!node) return [];
+            return [...postorderTraversal(node.left), ...postorderTraversal(node.right), node.value];
+        }
+    </script>
+</body>
+</html>

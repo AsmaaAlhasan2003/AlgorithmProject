@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شجرة AVL</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin-top: 30px;
+        }
+
+        .node circle {
+            fill: #3498db;
+            stroke: #fff;
+            stroke-width: 3px;
+        }
+
+        .node text {
+            font: 14px sans-serif;
+            fill: #fff;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+
+        .btn {
+            transition: background 0.3s ease;
+        }
+
+            .btn:hover {
+                background-color: #e67e22;
+            }
+
+        .input-group input {
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .statistics {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #f39c12;
+        }
+
+        #tree-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h4>إدخال عنصر جديد</h4>
+                <div class="input-group mb-3">
+                    <input type="number" id="insertValue" class="form-control" placeholder="أدخل رقماً">
+                    <button class="btn btn-primary" onclick="insertValue()">إدخال</button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h4>البحث عن عنصر</h4>
+                <div class="input-group mb-3">
+                    <input type="number" id="searchValue" class="form-control" placeholder="أدخل رقماً للبحث">
+                    <button class="btn btn-success" onclick="searchValue()">بحث</button>
+                </div>
+                <label>عدد المحاولات:</label>
+                <span id="searchAttempts">0</span>
+            </div>
+            <div class="col-md-4">
+                <h4>حذف عنصر</h4>
+                <div class="input-group mb-3">
+                    <input type="number" id="deleteValue" class="form-control" placeholder="أدخل رقماً للحذف">
+                    <button class="btn btn-danger" onclick="deleteValue()">حذف</button>
+                </div>
+                <label>عدد المحاولات:</label>
+                <span id="deleteAttempts">0</span>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <h4>جذر الشجرة الحالي</h4>
+            <p id="rootValue" class="fs-4 text-warning">غير محدد</p>
+            <button class="btn btn-info" onclick="getRoot()">عرض الجذر</button>
+        </div>
+
+        <div class="mt-4">
+            <h4>عرض شجرة AVL</h4>
+            <div id="tree-container"></div>
+        </div>
+
+        <div class="statistics">
+            <h4>إحصائيات الحذف:</h4>
+            <p>عدد المحاولات: <span id="deleteAttempts">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('حدث خطأ أثناء العملية.');
+            }
+        }
+
+        async function insertValue() {
+            const value = parseInt(document.getElementById("insertValue").value);
+            if (!value) return alert("يرجى إدخال قيمة صالحة.");
+            await fetchData("/avltree/insert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(value)
+            });
+            drawTree();
+        }
+
+        async function searchValue() {
+            const value = document.getElementById("searchValue").value;
+            if (!value) return alert("يرجى إدخال قيمة للبحث.");
+            const data = await fetchData(`/avltree/search/${value}`);
+            if (data) {
+                alert(data.found ? `العنصر ${value} موجود في الشجرة.` : `العنصر ${value} غير موجود.`);
+                document.getElementById("searchAttempts").textContent = data.attempts;
+            }
+        }
+
+        async function deleteValue() {
+            const value = parseInt(document.getElementById("deleteValue").value);
+            if (!value) return alert("يرجى إدخال قيمة صالحة.");
+            const data = await fetchData(`/avltree/delete/${value}`, { method: "DELETE" });
+            document.getElementById("deleteAttempts").textContent = data.attempts;
+            drawTree();
+        }
+
+        async function getRoot() {
+            const data = await fetchData("/avltree/root");
+            document.getElementById("rootValue").textContent = data.rootValue ?? "الشجرة فارغة";
+        }
+
+        async function getTreeValues() {
+            return await fetchData("/avltree/values") || [];
+        }
+
+        async function drawTree() {
+            const treeValues = await getTreeValues();
+            document.getElementById("tree-container").innerHTML = "";
+            const svg = d3.select("#tree-container").append("svg")
+                .attr("width", 800).attr("height", 500)
+                .append("g").attr("transform", "translate(50,50)");
+            const root = d3.hierarchy(buildTree(treeValues), d => d.children);
+            const treeLayout = d3.tree().size([200, 100]);
+            treeLayout(root);
+
+            svg.selectAll(".link").data(root.links()).enter()
+                .append("line").attr("class", "link")
+                .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+
+            const node = svg.selectAll(".node").data(root.descendants()).enter()
+                .append("g").attr("class", "node")
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+            node.append("circle").attr("r", 20);
+            node.append("text").attr("dy", "0.35em").attr("text-anchor", "middle")
+                .text(d => d.data.value);
+        }
+
+        function buildTree(values) {
+            if (!values.length) return null;
+            values.sort((a, b) => a - b);
+            function sortedArrayToBST(arr, start, end) {
+                if (start > end) return null;
+                const mid = Math.floor((start + end) / 2);
+                return {
+                    value: arr[mid],
+                    children: [
+                        sortedArrayToBST(arr, start, mid - 1),
+                        sortedArrayToBST(arr, mid + 1, end)
+                    ].filter(Boolean)
+                };
+            }
+            return sortedArrayToBST(values, 0, values.length - 1);
+        }
+
+        window.onload = drawTree;
+    </script>
+</body>
+</html>
